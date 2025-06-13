@@ -34,10 +34,10 @@ conn.execute("""
 	)
 	""")
 
-p = Path('/Volumes/Music/Classical')
-#p = Path('/Volumes/Music/Classical/Artur Rubinstein') #mp3
-#p = Path('/Volumes/Music/Classical/András Schiff') #mp4
-#p = Path('/Volumes/Music/Classical/Anne Akiko Meyers, David Lockington, English Chamber Orchestra') #flac
+#p = Path('../mnt/Compilations')
+p = Path('../mnt/Classical/Artur Rubinstein') #mp3
+#p = Path('../mnt/Classical/András Schiff') #mp4
+#p = Path('../mnt/Classical/Anne Akiko Meyers, David Lockington, English Chamber Orchestra') #flac
 
 def tag(tags, key, default=''):
 	if key in tags:
@@ -68,7 +68,7 @@ def analyze(file):
 	# File properties
 	entry = MusicFile(str(file.parent), file.name, filetype)
 
-	#print(f'{path} "{filename}"')
+	print(f'{file.name} "{filetype}"')
 	#print(filename)
 	# Stream info
 	entry.length = f.info.length

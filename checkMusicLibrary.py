@@ -2,7 +2,6 @@
 
 from pathlib import Path
 import sqlite3 as sl
-import mutagen
 
 conn = sl.connect('music.db')
 
@@ -28,7 +27,7 @@ for p in paths:
 			albumartist = albumartists[0][0]
 			#print(f'{path} has multiple artist, but one album artist {albumartist}, phew')
 			if albumartist == None:
-				printf(f'{path} has more than one artist, but does not have an album artist')
+				print(f'{path} has more than one artist, but does not have an album artist')
 
 	albums = conn.execute("SELECT DISTINCT album FROM music WHERE filepath=?;", (path,)).fetchall()
 	if len(albums) != 1:
