@@ -26,11 +26,11 @@ class MusicFile:
 
 class MusicDisc:
 	def __init__(self, disc):
-		self.disc
+		self.disc = disc
 		self.tracks = []
 
 	def addTrack(self, track):
-		self.append(track)
+		self.tracks.append(track)
 
 class MusicTrack:
 	def __init__(self, disc, track, title):
@@ -56,11 +56,11 @@ class MusicAlbum:
 				self.discs[disc] = []
 			musicDisc = self.discs[disc]
 			track = file[9]
-			musicDisc[track] = MusicTrack(disc, track, title)
+			musicDisc[track] = MusicTrack(disc, track, file.title)
 
 
-	def addDisc(disc, tracks):
+	def addDisc(self, disc, tracks):
 		self.discs[disc] = tracks
 
-	def addTrack(disc, track, title):
+	def addTrack(self, disc, track, title):
 		self.discs[disc].tracks[track] = MusicTrack(title)

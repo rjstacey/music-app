@@ -5,16 +5,16 @@ import sqlite3 as sl
 
 conn = sl.connect('music.db')
 
-paths = conn.execute("SELECT DISTINCT filepath FROM music;").fetchall()
 albums, artists, tracks = conn.execute("""
 	SELECT 
 		COUNT(DISTINCT album) as albums,
-		COUNT(DISTINCT artist) as artists,
-		COUNt(DISTINCT title) as tracks 
+		COUNT(DISTINCT albumartist) as artists,
+		COUNT(DISTINCT title) as tracks 
 	FROM music;
 	""").fetchone()
 print(artists, 'artists,', albums, 'albums,', tracks, 'songs')
 
+paths = conn.execute("SELECT DISTINCT filepath FROM music;").fetchall()
 for p in paths:
 	path = p[0]
 	#print(path)
@@ -45,9 +45,9 @@ for p in paths:
 			print(f'{path} has more than one track total: ', tracktotals)
 		else:
 			tracktotal = tracktotals[0][0]
-			if not tracktotal:
-				print(f'{path} has no track total')
-			else:
+			#if not tracktotal:
+			#	print(f'{path} has no track total')
+			if tracktotal:
 				count, highesttrack = conn.execute("SELECT COUNT(filename), MAX(track) FROM music WHERE filepath=? AND disc=?;", (path,disc)).fetchone()
 				if count != tracktotal:
 					print(f'{path} number of files ({count}) does not match track count ({tracktotal})')

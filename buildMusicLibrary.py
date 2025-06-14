@@ -34,8 +34,8 @@ conn.execute("""
 	)
 	""")
 
-#p = Path('../mnt/Compilations')
-p = Path('../mnt/Classical/Artur Rubinstein') #mp3
+p = Path('../mnt/HD')
+#p = Path('../mnt/Classical/Artur Rubinstein') #mp3
 #p = Path('../mnt/Classical/András Schiff') #mp4
 #p = Path('../mnt/Classical/Anne Akiko Meyers, David Lockington, English Chamber Orchestra') #flac
 
@@ -51,7 +51,12 @@ def tag(tags, key, default=''):
 		return default
 
 def analyze(file):
-	f = mutagen.File(file, easy=False)
+	try:
+		f = mutagen.File(file, easy=False)
+	except:
+		print(f'Error reading file: {file}')
+		return None
+	
 	if not f:
 		return None
 
@@ -68,7 +73,7 @@ def analyze(file):
 	# File properties
 	entry = MusicFile(str(file.parent), file.name, filetype)
 
-	print(f'{file.name} "{filetype}"')
+	#print(f'{file.name} "{filetype}"')
 	#print(filename)
 	# Stream info
 	entry.length = f.info.length
@@ -126,7 +131,8 @@ def analyze(file):
 		entry.genre = tag(f.tags, 'TCON')
 		entry.track = tag(f.tags, 'TRCK')
 		entry.disc = tag(f.tags, 'TPOS')
-		entry.date = tag(f.tags, 'TDRC').get_text()
+		date = tag(f.tags, 'TDRC')
+		entry.date = date if (type(date) == str) else date.get_text()
 		entry.media = tag(f.tags, 'TMED')
 		entry.recordlabel = tag(f.tags, 'TPUB')
 		entry.originaldata = tag(f.tags, 'TDOR')
@@ -141,7 +147,7 @@ def analyze(file):
 		#print(f.tags.pprint())
 
 	#print(type(entry.date))
-	#print(f'{entry.getArtist()} - {entry.album}: track {entry.track}/{entry.tracktotal}: "{entry.title}" ')
+	print(f'{entry.getArtist()} - {entry.album}: track {entry.track}/{entry.tracktotal}: "{entry.title}" ')
 	conn.execute("""
 		INSERT INTO MUSIC(
 			filepath, filename, filetype,
