@@ -17,11 +17,12 @@ class Options:
 		self.outputdir = './MyMusic'
 		self.replace = False
 		try:
-			opts, args = getopt.getopt(argv, "ho:", ["odir="])
+			opts, args = getopt.getopt(argv, "ho:r", ["odir="])
 		except getopt.GetoptError:
 			print(f'{name} [-o <outputdir>] [-r]')
 			sys.exit(2)
 		for opt, arg in opts:
+			print(opt)
 			if opt == '-h':
 				print(f'{name} [-o <outputdir>] [-r]')
 				sys.exit()
@@ -34,7 +35,7 @@ import unicodedata
 
 def normalize(filename):
     cleanedFilename = unicodedata.normalize('NFKD', filename) #.encode('ASCII', 'ignore')
-    return re.sub(r"[\/\\:*?<>|^]+", r'_', cleanedFilename)
+    return re.sub(r"[\/\\:*?<>|^\"]+", r'_', cleanedFilename)
 
 def genFilename(entry):
 	name = ''
@@ -62,6 +63,7 @@ def destinationDir(outputdir, artist, album):
 
 def copyFile(destinationDir, entry):
 	src = os.path.join(entry['filepath'], entry['filename'])
+	
 	description = f"\t\t{int(entry['track'] or '0'):02} {entry['title']} \t{genType(entry)}"
 
 	ext = '.mp3' if entry['filetype'] == 'mp3' else '.m4a'
@@ -77,7 +79,13 @@ def copyFile(destinationDir, entry):
 	try:
 		if entry['filetype'] == 'flac' or entry['filetype'] == 'mp4':
 			print(description, ' Transcoding')
-			subprocess.run([ffmpegPath, '-loglevel', 'quiet', '-i', src, '-map', 'a:0', '-c:a', 'aac', '-ar', '44100', '-b:a', '256k', dest])
+			extraArgs = ''
+			if (entry['album'].endswith(' [HD]')):
+				album = entry['album'].replace(' [HD]', '')
+				extraArgs = f'-metadata album="{album}"'
+			cmd = ffmpegPath + f' -loglevel quiet -i "{src}" -map a:0 -c:a aac -ar 44100 -b:a 256k {extraArgs} "{dest}"'
+			print(cmd)
+			subprocess.run(cmd, shell=True, check=True)
 		elif entry['filetype'] == 'mp3':
 			print(description, ' Copying')
 			copy2(src, dest)
@@ -91,10 +99,15 @@ def main(options):
 	conn = sl.connect('music.db')
 	conn.row_factory = sl.Row
 
+	# Remove entries for HD albums that have regular equivalents
+	conn.execute("DELETE FROM music WHERE album IN (SELECT DISTINCT CONCAT(album, ' [HD]') FROM music WHERE album NOT LIKE '% [HD]');")
+
 	rows = conn.execute("SELECT DISTINCT albumartist FROM music ORDER BY albumartist;")
 	artists = list(map(lambda r: r['albumartist'], rows))
 	for artist in artists:
 		print(artist)
+		if (artist == "The Smile"):
+			continue
 		rows = conn.execute("SELECT DISTINCT album FROM music WHERE albumartist=? ORDER BY album;", (artist,))
 		albums = list(map(lambda r: r['album'], rows))
 		artistDir = os.path.join(options.outputdir, normalize(artist))
@@ -103,8 +116,11 @@ def main(options):
 		for album in albums:
 			print(f'\t{album}')
 			rows = conn.execute("SELECT * FROM music WHERE albumartist=? AND album=? ORDER BY filepath, disc, track;", (artist,album))
+			if (album.endswith(' [HD]')):
+				album = album.replace(' [HD]', '')
 			albumDir = os.path.join(artistDir, normalize(album))
 			if options.replace:
+				print(f'\t\tReplacing {albumDir}')
 				shutil.rmtree(albumDir, ignore_errors=True) 
 			os.makedirs(albumDir, exist_ok=True)
 			for entry in rows:

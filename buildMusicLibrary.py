@@ -121,6 +121,14 @@ def analyze(file):
 		entry.media = tag(f.tags, 'MEDIA')
 		entry.recordlabel = tag(f.tags, 'LABEL')
 		entry.originaldata = tag(f.tags, 'ORIGINALDATE')
+		try:
+			entry.track, entry.tracktotal = entry.track.split('/', 1)
+		except ValueError:
+			pass
+		try:
+			entry.disc, entry.disctotal = entry.disc.split('/', 1)
+		except ValueError:
+			pass
 		#print(f.tags.pprint())
 	elif (filetype == 'mp3'):
 		entry.title = tag(f.tags, 'TIT2')
